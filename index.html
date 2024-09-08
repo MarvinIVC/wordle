@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Clone</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #6200ea;
+            color: white;
+            padding: 20px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #game-container {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tile {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ddd;
+            line-height: 60px;
+            font-size: 24px;
+            text-transform: uppercase;
+            font-weight: bold;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .tile.correct {
+            background-color: #6aaa64;
+            border-color: #6aaa64;
+        }
+
+        .tile.partial {
+            background-color: #c9b458;
+            border-color: #c9b458;
+        }
+
+        .tile.wrong {
+            background-color: #787c7e;
+            border-color: #787c7e;
+        }
+
+        #keyboard {
+            max-width: 600px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .key {
+            padding: 15px;
+            background-color: #ddd;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .key:hover {
+            background-color: #bbb;
+        }
+
+        .key.correct {
+            background-color: #6aaa64;
+            color: white;
+        }
+
+        .key.partial {
+            background-color: #c9b458;
+            color: white;
+        }
+
+        .key.wrong {
+            background-color: #787c7e;
+            color: white;
+        }
+
+        #message {
+            font-size: 18px;
+            margin-top: 20px;
+            height: 30px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <header>Wordle Clone - Play Forever!</header>
+
+    <div id="game-container">
+        <div id="grid" class="grid"></div>
+        <div id="message"></div>
+        <div id="keyboard"></div>
+    </div>
+
+    <script>
+        let wordList = [];
+        let word = '';
+        let currentRow = 0;
+        let currentGuess = '';
+        const maxGuesses = 6;
+
+        const grid = document.getElementById('grid');
+        const message = document.getElementById('message');
+        const keyboard = document.getElementById('keyboard');
+
+        // Fetch the list of words from the URL
+        async function fetchWordList() {
+            try {
+                const response = await fetch('https://gist.githubusercontent.com/shmookey/b28e342e1b1756c4700f42f17102c2ff/raw/ed4c33a168027aa1e448c579c8383fe20a3a6225/WORDS');
+                const text = await response.text();
+                wordList = text.split('\n').map(word => word.trim().toUpperCase());
+                chooseRandomWord();
+            } catch (error) {
+                console.error('Error fetching word list:', error);
+                message.innerText = 'Error loading words. Try again later!';
+            }
+        }
+
+        function chooseRandomWord() {
+            word = wordList[Math.floor(Math.random() * wordList.length)];
+        }
+
+        // Initialize the grid
+        function initializeGrid() {
+            for (let i = 0; i < maxGuesses; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const tile = document.createElement('div');
+                    tile.classList.add('tile');
+                    tile.setAttribute('data-row', i);
+                    tile.setAttribute('data-col', j);
+                    grid.appendChild(tile);
+                }
+            }
+        }
+
+        function initializeKeyboard() {
+            const keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            keys.split('').forEach(key => {
+                const button = document.createElement('button');
+                button.classList.add('key');
+                button.innerText = key;
+                button.onclick = () => handleKeyPress(key);
+                keyboard.appendChild(button);
+            });
+
+            const enterButton = document.createElement('button');
+            enterButton.classList.add('key');
+            enterButton.innerText = 'Enter';
+            enterButton.onclick = handleSubmit;
+            keyboard.appendChild(enterButton);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('key');
+            deleteButton.innerText = 'Delete';
+            deleteButton.onclick = handleDelete;
+            keyboard.appendChild(deleteButton);
+        }
+
+        function handleKeyPress(letter) {
+            if (currentGuess.length < 5) {
+                currentGuess += letter;
+                updateGrid();
+                message.innerText = ''; // Clear any previous error message
+            }
+        }
+
+        function handleDelete() {
+            if (currentGuess.length > 0) {
+                currentGuess = currentGuess.slice(0, -1);
+                updateGrid();
+            }
+        }
+
+        function handleSubmit() {
+            if (currentGuess.length === 5) {
+                if (wordList.includes(currentGuess)) {
+                    checkGuess();
+                } else {
+                    message.innerText = 'Enter an existing word';
+                    clearCurrentRow();  // Clear the row if the word is invalid
+                }
+            } else {
+                message.innerText = 'Word must be 5 letters long!';
+            }
+        }
+
+        function updateGrid() {
+            for (let i = 0; i < 5; i++) {
+                const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${i}"]`);
+                tile.innerText = currentGuess[i] || '';
+            }
+        }
+
+        // Clear the current row when an invalid word is entered
+        function clearCurrentRow() {
+            currentGuess = '';
+            updateGrid(); // Clear the tiles
+        }
+
+        function checkGuess() {
+            const guess = currentGuess.toUpperCase();
+            if (guess === word) {
+                for (let i = 0; i < 5; i++) {
+                    const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${i}"]`);
+                    tile.classList.add('correct');
+                }
+                message.innerText = 'You guessed the word!';
+                return;
+            }
+
+            let remainingWord = word;
+            for (let i = 0; i < 5; i++) {
+                const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${i}"]`);
+                if (guess[i] === word[i]) {
+                    tile.classList.add('correct');
+                    remainingWord = remainingWord.replace(guess[i], '');
+                }
+            }
+
+            for (let i = 0; i < 5; i++) {
+                const tile = document.querySelector(`.tile[data-row="${currentRow}"][data-col="${i}"]`);
+                if (!tile.classList.contains('correct') && remainingWord.includes(guess[i])) {
+                    tile.classList.add('partial');
+                    remainingWord = remainingWord.replace(guess[i], '');
+                } else if (!tile.classList.contains('correct')) {
+                    tile.classList.add('wrong');
+                }
+            }
+
+            currentRow++;
+            currentGuess = '';
+
+            if (currentRow === maxGuesses) {
+                message.innerText = `Game over! The word was ${word}.`;
+            }
+        }
+
+        // Handle physical keyboard input
+        function handlePhysicalKeyPress(event) {
+            const letter = event.key.toUpperCase();
+            if (/^[A-Z]$/.test(letter)) {
+                handleKeyPress(letter);
+            } else if (event.key === 'Enter') {
+                handleSubmit();
+            } else if (event.key === 'Backspace') {
+                handleDelete();
+            }
+        }
+
+        // Initialize the game
+        window.onload = () => {
+            fetchWordList(); // Fetch word list when the page loads
+            initializeGrid();
+            initializeKeyboard();
+            document.addEventListener('keydown', handlePhysicalKeyPress); // Add keyboard input support
+        };
+    </script>
+</body>
