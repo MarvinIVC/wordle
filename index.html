@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wordle Clone</title>
+    <title>Marvin's Wordle - Free Forever!</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -20,6 +20,20 @@
             padding: 20px 0;
             font-size: 24px;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        #timer {
+            font-size: 18px;
+            background-color: white;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
         }
 
         #game-container {
@@ -112,7 +126,10 @@
     </style>
 </head>
 <body>
-    <header>Marvin's Wordle - Play Forever!</header>
+    <header>
+        Marvin's Wordle - Free Forever!
+        <div id="timer">0:00</div>
+    </header>
 
     <div id="game-container">
         <div id="grid" class="grid"></div>
@@ -130,6 +147,7 @@
         const grid = document.getElementById('grid');
         const message = document.getElementById('message');
         const keyboard = document.getElementById('keyboard');
+        const timerElement = document.getElementById('timer');
 
         // Fetch the list of words from the URL
         async function fetchWordList() {
@@ -263,24 +281,32 @@
             }
         }
 
-        // Handle physical keyboard input
-        function handlePhysicalKeyPress(event) {
-            const letter = event.key.toUpperCase();
-            if (/^[A-Z]$/.test(letter)) {
-                handleKeyPress(letter);
-            } else if (event.key === 'Enter') {
-                handleSubmit();
-            } else if (event.key === 'Backspace') {
-                handleDelete();
-            }
+        // Timer logic
+        let timerInterval;
+        function startTimer() {
+            let totalSeconds = 0;
+            timerInterval = setInterval(() => {
+                totalSeconds++;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                timerElement.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }, 1000);
         }
 
         // Initialize the game
-        window.onload = () => {
-            fetchWordList(); // Fetch word list when the page loads
+        function startGame() {
+            currentRow = 0;
+            currentGuess = '';
+            grid.innerHTML = '';
+            keyboard.innerHTML = '';
+            message.innerText = '';
             initializeGrid();
             initializeKeyboard();
-            document.addEventListener('keydown', handlePhysicalKeyPress); // Add keyboard input support
-        };
+            fetchWordList();
+            startTimer();
+        }
+
+        startGame();
     </script>
 </body>
+</html>
