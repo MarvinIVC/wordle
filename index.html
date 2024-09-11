@@ -181,22 +181,28 @@
         const fiveLetterBtn = document.getElementById('five-letter');
         const sixLetterBtn = document.getElementById('six-letter');
 
-        // Fetch the list of words based on the letter count
         async function fetchWordList() {
             try {
                 let url = letterCount === 5 
                     ? 'https://gist.githubusercontent.com/shmookey/b28e342e1b1756c4700f42f17102c2ff/raw/ed4c33a168027aa1e448c579c8383fe20a3a6225/WORDS'
                     : 'https://raw.githubusercontent.com/MarvinIVC/6word/main/word.txt';
-
+        
                 const response = await fetch(url);
                 const text = await response.text();
-                wordList = text.split('\n').map(word => word.trim().toUpperCase());
+        
+                // For 6-letter words, split by both space and newline to handle 10 words per line
+                if (letterCount === 6) {
+                    wordList = text.split(/\s+/).map(word => word.trim().toUpperCase());
+                } else {
+                    wordList = text.split('\n').map(word => word.trim().toUpperCase());
+                }
+        
                 chooseRandomWord();
             } catch (error) {
                 console.error('Error fetching word list:', error);
                 message.innerText = 'Error loading words. Try again later!';
             }
-        }
+    }
 
         function chooseRandomWord() {
             word = wordList[Math.floor(Math.random() * wordList.length)];
