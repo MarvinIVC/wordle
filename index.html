@@ -372,6 +372,10 @@
             initializeGrid();
             initializeKeyboard();
             fetchWordList();
+        
+            // Ensure the document or grid is focused for keyboard input
+            document.activeElement.blur();  // Removes any active element focus
+            document.body.focus();          // Focus the document body for keyboard events
         }
 
         startTimer();
