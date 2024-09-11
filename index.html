@@ -149,7 +149,7 @@
         const keyboard = document.getElementById('keyboard');
         const timerElement = document.getElementById('timer');
 
-        // Fetch the list of words from the URL
+
         async function fetchWordList() {
             try {
                 const response = await fetch('https://gist.githubusercontent.com/shmookey/b28e342e1b1756c4700f42f17102c2ff/raw/ed4c33a168027aa1e448c579c8383fe20a3a6225/WORDS');
@@ -161,12 +161,23 @@
                 message.innerText = 'Error loading words. Try again later!';
             }
         }
+        
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toUpperCase();
+            
+            if (key === 'ENTER') {
+                handleSubmit();
+            } else if (key === 'BACKSPACE' || key === 'DELETE') {
+                handleDelete();
+            } else if (/^[A-Z]$/.test(key)) {  // Check if it's a letter
+                handleKeyPress(key);
+            }
+        });
 
         function chooseRandomWord() {
             word = wordList[Math.floor(Math.random() * wordList.length)];
         }
 
-        // Initialize the grid
         function initializeGrid() {
             for (let i = 0; i < maxGuesses; i++) {
                 for (let j = 0; j < 5; j++) {
@@ -206,7 +217,7 @@
             if (currentGuess.length < 5) {
                 currentGuess += letter;
                 updateGrid();
-                message.innerText = ''; // Clear any previous error message
+                message.innerText = ''; 
             }
         }
 
@@ -223,7 +234,7 @@
                     checkGuess();
                 } else {
                     message.innerText = 'Enter an existing word';
-                    clearCurrentRow();  // Clear the row if the word is invalid
+                    clearCurrentRow();  
                 }
             } else {
                 message.innerText = 'Word must be 5 letters long!';
@@ -237,7 +248,7 @@
             }
         }
 
-        // Clear the current row when an invalid word is entered
+ 
         function clearCurrentRow() {
             currentGuess = '';
             updateGrid(); // Clear the tiles
@@ -293,7 +304,6 @@
             }, 1000);
         }
 
-        // Initialize the game
         function startGame() {
             currentRow = 0;
             currentGuess = '';
