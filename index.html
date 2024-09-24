@@ -146,6 +146,25 @@
         #mode-selector button.active {
             background-color: #3700b3;
         }
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .footer-text {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .footer-heart {
+            width: 24px;
+            height: 24px;
+        }
 
     </style>
 </head>
@@ -164,6 +183,10 @@
         <div id="grid" class="grid"></div>
         <div id="message"></div>
         <div id="keyboard"></div>
+    </div>
+    <div class="footer">
+        <div class="footer-text">Crafted by Marvin with Love</div>
+        <img class="footer-heart" src="https://cdn.pixabay.com/photo/2017/06/24/20/27/heart-2438746_1280.png" alt="Heart">
     </div>
 
     <script>
